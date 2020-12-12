@@ -1,7 +1,7 @@
-from tkinter import Tk, Y, BOTH, Menu, Canvas, LEFT, RIGHT, RAISED, NE
+from tkinter import Tk, X, Y, BOTH, Menu, Canvas, LEFT, RIGHT, RAISED, NE, W, font, Scrollbar
 from tkinter.ttk import Frame, Style
 
-class Ejemplo(Frame):
+class LDAPConsole(Frame):
   
   def __init__(self):
     super().__init__()
@@ -38,17 +38,18 @@ class Ejemplo(Frame):
 
     ## Definicion de frames secundarios anidados en el principal.
     ## Nuevo frame para contener la representacion del arbol de directorio.
-    treeNavFrame=Frame(self)
-    treeNavFrame.config(relief=RAISED,borderwidth=2)
-    treeNavCanvas=Canvas(treeNavFrame,bg="white",width=200,height=120)
-    treeNavCanvas.pack(fill=Y,side=LEFT)
-    treeNavFrame.pack(fill=Y,side=LEFT)
+    self.treeNavFrame=Frame(self)
+    self.treeNavFrame.config(relief=RAISED,borderwidth=2)
+    self.treeNavCanvas=Canvas(self.treeNavFrame,bg="white",width=200,height=120)
+    self.treeNavCanvas.pack(fill=Y,side=LEFT)
+    self.treeNavFrame.pack(fill=Y,side=LEFT)
     ## Nuevo frame para contener la información de objetos seleccionados.
-    infoFrame=Frame(self)
-    infoFrame.config(relief=RAISED,borderwidth=2)
-    infoFrameCanvas=Canvas(infoFrame,bg="white",width=500,height=200)
-    infoFrameCanvas.pack(anchor=NE)
-    infoFrame.pack(anchor=NE)
+    self.infoFrame=Frame(self)
+    self.infoFrame.config(relief=RAISED,borderwidth=2)
+    self.infoFrameCanvas=Canvas(self.infoFrame,bg="white",width=500,height=400)
+    self.infoFrameCanvas.pack(fill=X,anchor=NE)
+    self.infoFrame.pack(fill=X,anchor=NE)
+
 
   def ExitOption(self):
     self.quit()
@@ -57,12 +58,18 @@ class Ejemplo(Frame):
   def CloseConnection(self):
     self.quit()
 
-def main():
-  ventanaRaiz=Tk()
-  ventanaRaiz.geometry("700x500+150+150")
-  ventanaRaiz.minsize(380,180)
-  consola=Ejemplo()
-  ventanaRaiz.mainloop()
-    
-if __name__ == '__main__':
-  main()
+def initTk():
+  return Tk()
+
+def oneRightClick(event):
+  print("Right clicked mouse on line {}".format(event.widget.gettags(event.widget.find_closest(event.x,event.y))))
+
+def oneLeftClick(event):
+  print("Left clicked mouse on line {}".format(event.widget.gettags(event.widget.find_closest(event.x,event.y))))
+
+def displayEntry(mainConsoleObj,textString,yPos):
+  lineEntry=mainConsoleObj.treeNavCanvas.create_text(10,yPos,font=("Times",10,"bold"),anchor=W,text="+ {}".format(textString),activefill="red",tags=textString)
+  mainConsoleObj.treeNavCanvas.tag_bind(lineEntry,'<Button-1>',oneRightClick)
+  mainConsoleObj.treeNavCanvas.tag_bind(lineEntry,'<Button-3>',oneLeftClick,add="+")
+  return lineEntry
+  

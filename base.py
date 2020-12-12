@@ -2,6 +2,7 @@
 import sys
 import ldapoperations
 import loadconfig
+import interface
 
 class ConfigNotFound(Exception):
   pass
@@ -30,14 +31,22 @@ except ConfigError:
   print("There is an error within the config file.")
   sys.exit(1)
 
-print("Inicializar entorno LDAP.")
-srvObject, connObject=ldapoperations.BeginLdap(ldapServer=serverConfig["ldapServer"],ldapPort=serverConfig["ldapPort"],ldapCredentials=credentials)
-print("El tipo de srvObject es {}.".format(type(srvObject)))
-print("El objeto srvObject contiene la siguiente información {}.".format(srvObject))
-print("El tipo de connObject es {}.".format(type(connObject)))
-print("El objeto connObject contiene la siguiente información {}.".format(connObject))
+rootWindow=interface.initTk()
+## Informacion sobre geometria de ventana.
+screenWidth=rootWindow.winfo_screenwidth()
+screenHeight=rootWindow.winfo_screenheight()
+rootWindow.geometry("640x480+150+150")
+rootWindow.minsize(640,480)
+mainConsole=interface.LDAPConsole()
 
-print("Conexion y bind con el servidor LDAP.")
+#print("Inicializar entorno LDAP.")
+srvObject, connObject=ldapoperations.BeginLdap(ldapServer=serverConfig["ldapServer"],ldapPort=serverConfig["ldapPort"],ldapCredentials=credentials)
+#print("El tipo de srvObject es {}.".format(type(srvObject)))
+#print("El objeto srvObject contiene la siguiente información {}.".format(srvObject))
+#print("El tipo de connObject es {}.".format(type(connObject)))
+#print("El objeto connObject contiene la siguiente información {}.".format(connObject))
+
+#print("Conexion y bind con el servidor LDAP.")
 bindResult=ldapoperations.LdapBind(connObject)
 if bindResult:
   print("Bind realizado correctamente - {}.".format(bindResult))
@@ -52,20 +61,25 @@ if bindResult:
 else:
   print("Error en el bind - {}.".format(bindResult)) 
 
-print("Leer el schema completo del servidor LDAP.")
+#print("Leer el schema completo del servidor LDAP.")
 #print(srvObject.schema)
-print("Leer el árbol completo del servidor LDAP.")
-ldapoperations.SearchLdap(connObject,rootSearch=SrvDSAInfo["NamingContexts"][0],scopeSearch="SUBTREE")
-#print(connObject.entries)
-print("El tipo de objeto entries es {}.".format(type(connObject.entries)))
-contador=1
-for ldapentry in connObject.entries:
-  print("Entrada {}".format(contador))
+#print("Leer el árbol completo del servidor LDAP.")
+print("Los naming contexts disponibles son los siguientes: {}.".format(SrvDSAInfo["NamingContexts"]))
+## Busqueda base desde el raiz.
+ldapoperations.SearchLdap(connObject,rootSearch=SrvDSAInfo["NamingContexts"][0],scopeSearch="LEVEL")
+print(connObject.entries)
+#print("El tipo de objeto entries es {}.".format(type(connObject.entries)))
+interface.displayEntry(mainConsole,SrvDSAInfo["NamingContexts"][0],10)
+rowPos=30
+treeLine=[]
+for ldapentry in connObject.response:
+  treeLine.append(interface.displayEntry(mainConsole,ldapentry['dn'],rowPos))
+  rowPos+=20
   print(ldapentry)
-  contador=contador+1
 
 print("Realizar representación gráfica del árbol del servidor LDAP.")
 
 connObject.unbind()
+rootWindow.mainloop()
 
 exit(0)
