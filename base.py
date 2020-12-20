@@ -39,27 +39,22 @@ rootWindow.geometry("640x480+150+150")
 rootWindow.minsize(640,480)
 mainConsole=interface.LDAPConsole()
 
-#print("Inicializar entorno LDAP.")
 srvObject, connObject=ldapoperations.BeginLdap(ldapServer=serverConfig["ldapServer"],ldapPort=serverConfig["ldapPort"],ldapCredentials=credentials)
-#print("El tipo de srvObject es {}.".format(type(srvObject)))
-#print("El objeto srvObject contiene la siguiente información {}.".format(srvObject))
-#print("El tipo de connObject es {}.".format(type(connObject)))
-#print("El objeto connObject contiene la siguiente información {}.".format(connObject))
 
-#print("Conexion y bind con el servidor LDAP.")
 bindResult=ldapoperations.LdapBind(connObject)
 if bindResult:
-  print("Bind realizado correctamente - {}.".format(bindResult))
-  print("Obteniendo informacion de serviddor LDAP.")
+  #print("Bind realizado correctamente - {}.".format(bindResult))
+  #print("Obteniendo informacion de serviddor LDAP.")
   SrvDSAInfo=ldapoperations.GetDSAInfo(srvObject)
-  print("Vendor del LDAP Server - {}.".format(SrvDSAInfo["Vendor"]))
-  print("Version del LDAP Server - {}.".format(SrvDSAInfo["VendorVersion"]))
-  print("Contextos disponibles - {}.".format(SrvDSAInfo["NamingContexts"]))
-  print("Tipo de dato de NamingContexts {}.".format(type(SrvDSAInfo["NamingContexts"])))
-  print("Other attributes {}".format(SrvDSAInfo["OtherAttrs"]))
-  print(srvObject.info)
+  #print("Vendor del LDAP Server - {}.".format(SrvDSAInfo["Vendor"]))
+  #print("Version del LDAP Server - {}.".format(SrvDSAInfo["VendorVersion"]))
+  #print("Contextos disponibles - {}.".format(SrvDSAInfo["NamingContexts"]))
+  #print("Tipo de dato de NamingContexts {}.".format(type(SrvDSAInfo["NamingContexts"])))
+  #print("Other attributes {}".format(SrvDSAInfo["OtherAttrs"]))
+  #print(srvObject.info)
 else:
-  print("Error en el bind - {}.".format(bindResult)) 
+  print("Error en el bind - {}.".format(bindResult))
+  sys.exit(1)
 
 #print("Leer el schema completo del servidor LDAP.")
 #print(srvObject.schema)
@@ -69,17 +64,20 @@ print("Los naming contexts disponibles son los siguientes: {}.".format(SrvDSAInf
 ldapoperations.SearchLdap(connObject,rootSearch=SrvDSAInfo["NamingContexts"][0],scopeSearch="LEVEL")
 print(connObject.entries)
 #print("El tipo de objeto entries es {}.".format(type(connObject.entries)))
-interface.displayEntry(mainConsole,SrvDSAInfo["NamingContexts"][0],10)
-rowPos=30
+## Primero represento la raiz del naming coontext.
+## El array treeLine contiene los identificadores de cada linea de texto
+## que se incluye en el izquierdo de navegacion. Al acceder a cada uno de ellos
+## podre hacer busquedas del objeto.
 treeLine=[]
+treeLine.append(interface.displayEntry(mainConsole,SrvDSAInfo["NamingContexts"][0],10,10))
+rowPos=30
+colPos=20
 for ldapentry in connObject.response:
-  treeLine.append(interface.displayEntry(mainConsole,ldapentry['dn'],rowPos))
+  treeLine.append(interface.displayEntry(mainConsole,ldapentry['dn'],rowPos,colPos))
   rowPos+=20
   print(ldapentry)
-
-print("Realizar representación gráfica del árbol del servidor LDAP.")
 
 connObject.unbind()
 rootWindow.mainloop()
 
-exit(0)
+sys.exit(0)

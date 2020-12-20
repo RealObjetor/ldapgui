@@ -50,7 +50,6 @@ class LDAPConsole(Frame):
     self.infoFrameCanvas.pack(fill=X,anchor=NE)
     self.infoFrame.pack(fill=X,anchor=NE)
 
-
   def ExitOption(self):
     self.quit()
   def OpenConnection(self):
@@ -65,11 +64,12 @@ def oneRightClick(event):
   print("Right clicked mouse on line {}".format(event.widget.gettags(event.widget.find_closest(event.x,event.y))))
 
 def oneLeftClick(event):
+  ## Por defecto, click sobre cualquier entrada provoca una busqueda de la misma.
   print("Left clicked mouse on line {}".format(event.widget.gettags(event.widget.find_closest(event.x,event.y))))
 
-def displayEntry(mainConsoleObj,textString,yPos):
-  lineEntry=mainConsoleObj.treeNavCanvas.create_text(10,yPos,font=("Times",10,"bold"),anchor=W,text="+ {}".format(textString),activefill="red",tags=textString)
-  mainConsoleObj.treeNavCanvas.tag_bind(lineEntry,'<Button-1>',oneRightClick)
-  mainConsoleObj.treeNavCanvas.tag_bind(lineEntry,'<Button-3>',oneLeftClick,add="+")
+def displayEntry(mainConsoleObj,textString,yPos,xPos):
+  lineEntry=mainConsoleObj.treeNavCanvas.create_text(xPos,yPos,font=("Times",10,"bold"),anchor=W,text="+ {}".format(textString),activefill="red",tags=textString)
+  mainConsoleObj.treeNavCanvas.tag_bind(lineEntry,'<Button-1>',oneLeftClick)
+  mainConsoleObj.treeNavCanvas.tag_bind(lineEntry,'<Button-3>',oneRightClick,add="+")
   return lineEntry
   
