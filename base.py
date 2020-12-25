@@ -115,15 +115,15 @@ if __name__ == "__main__":
     serverConfig, credentials=loadconfig.LoadConfig()
     ## El fichero de configuracion existe.
     if (not serverConfig) and (not credentials):
-      raise ConfigNotFound("No se encontro el puto fichero.")
+      raise ConfigNotFound("Configuration file not found.")
     ## Configuracion correcta
     if (not serverConfig) or (not credentials):
-      raise ConfigError("Hay un puto error en el puto fichero.")
+      raise ConfigError("There was an error in the configuration file.")
   except ConfigNotFound as e:
-    print("Config file not found. {}".format(e))
+    print("Config error - {}".format(e))
     sys.exit(1)
   except ConfigError as e:
-    print("There is an error within the config file. {}".format(e))
+    print("Config error - {}".format(e))
     sys.exit(1)
   
   srvObject, connObject=ldapoperations.BeginLdap(ldapServer=serverConfig["ldapServer"],ldapPort=serverConfig["ldapPort"],ldapCredentials=credentials)
@@ -156,7 +156,7 @@ if __name__ == "__main__":
   print("Los naming contexts disponibles son los siguientes: {}.".format(SrvDSAInfo["NamingContexts"]))
   ## Busqueda base desde el raiz.
   ldapoperations.SearchLdap(connObject,rootSearch=SrvDSAInfo["NamingContexts"][0],scopeSearch="LEVEL")
-  print(connObject.entries)
+  #print(connObject.entries)
   #print("El tipo de objeto entries es {}.".format(type(connObject.entries)))
   ## Primero represento la raiz del naming coontext.
   ## El array treeLine contiene los identificadores de cada linea de texto
