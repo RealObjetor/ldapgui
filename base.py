@@ -1,6 +1,6 @@
 #### Carga de módulos.
 from tkinter import Tk, X, Y, BOTH, Menu, Canvas, LEFT, RIGHT, RAISED, NE, W, font, Scrollbar
-from tkinter.ttk import Frame, Style
+from tkinter.ttk import Frame, Style, Treeview
 import sys
 import ldapoperations
 import loadconfig
@@ -60,8 +60,8 @@ class LDAPConsole(Frame):
     ## Nuevo frame para contener la representacion del arbol de directorio.
     self.treeNavFrame=Frame(self)
     self.treeNavFrame.config(relief=RAISED,borderwidth=2)
-    self.treeNavCanvas=Canvas(self.treeNavFrame,bg="white",width=200,height=120)
-    self.treeNavCanvas.pack(fill=Y,side=LEFT)
+    self.treeNavView=Treeview(self.treeNavFrame,show="tree")
+    self.treeNavView.pack(fill=Y,side=LEFT)
     self.treeNavFrame.pack(fill=Y,side=LEFT)
     ## Nuevo frame para contener la información de objetos seleccionados.
     self.infoFrame=Frame(self)
@@ -72,32 +72,33 @@ class LDAPConsole(Frame):
 
   def updateInfoSection(self,dntoSearch,infoToDisplay):
     self.infoFrameCanvas.delete("all")
-    self.infoFrameCanvas.create_text(20,20,font=("Times",40,"bold"),anchor=W,text="{}".format(dntoSearch))
+    self.infoFrameCanvas.create_text(20,20,font=("Liberation Serif Bold",40,"bold"),anchor=W,text="{}".format(dntoSearch[0]))
     row=40
-    self.infoFrameCanvas.create_text(20,row,font=("Times",30),anchor=W,text="objectClass: ")
+    self.infoFrameCanvas.create_text(20,row,font=("Liberation Serif Bold",30),anchor=W,text="objectClass: ")
     for objclass in infoToDisplay[0]["attributes"]["objectClass"]:
-      self.infoFrameCanvas.create_text(100,row,font=("Times",10),anchor=W,text="{}".format(objclass))
+      self.infoFrameCanvas.create_text(100,row,font=("Liberation Serif Bold",10),anchor=W,text="{}".format(objclass))
       row+=20
       print(objclass)
 
-  def __oneRightClick(self,event):
-    print("Right clicked mouse on line {}".format(event.widget.gettags(event.widget.find_closest(event.x,event.y))))
+  def __oneRightClick(self,event,ldapconnectionobject):
+    print("Right clicked mouse on line {}".format(event.widget.selection()))
 
   def __oneLeftClick(self,event,ldapconnectionobject):
     ## Por defecto, click sobre cualquier entrada provoca una busqueda de la misma.
-    print("Left clicked mouse on line {}".format(event.widget.gettags(event.widget.find_closest(event.x,event.y))))
-    dntoSearch=event.widget.gettags(event.widget.find_closest(event.x,event.y))[0]
+    print("Left clicked mouse on line {}".format(event.widget.selection()))
+    dntoSearch=event.widget.selection()
     print(dntoSearch)
     ldapoperations.SearchLdap(ldapconnectionobject,rootSearch=dntoSearch,scopeSearch="BASE")
     self.updateInfoSection(dntoSearch,ldapconnectionobject.response)
 
-  def DisplayAndBind(self,textString,rowPos,colPos,ldapconnectionobject):
-    self.treeNavCanvas.create_text(colPos,rowPos,font=("Times",10,"bold"),anchor=W,text="+ {}".format(textString),activefill="red",tags=textString)
+  def DisplayAndBind(self,parentID,lineIDX,textString,ldapconnectionobject):
+    self.treeNavView.insert(parentID,lineIDX,textString,open=True,text=textString)
     def lefclickhandler(event, self=self, parameters=ldapconnectionobject):
       return self.__oneLeftClick(event, ldapconnectionobject)
-    self.treeNavCanvas.tag_bind(textString,'<Button-1>',lefclickhandler)
-     
-    self.treeNavCanvas.tag_bind(textString,'<Button-3>',self.__oneRightClick,add="+")
+    self.treeNavView.bind('<<TreeviewSelect>>',lefclickhandler)
+    def rightclickhandler(event, self=self, parameters=ldapconnectionobject):
+      return self.__oneRightClick(event, ldapconnectionobject)
+    self.treeNavView.bind('<Button-3>',rightclickhandler)
 
   def ExitOption(self):
     self.quit()
@@ -155,23 +156,26 @@ if __name__ == "__main__":
   #print("Leer el árbol completo del servidor LDAP.")
   print("Los naming contexts disponibles son los siguientes: {}.".format(SrvDSAInfo["NamingContexts"]))
   ## Busqueda base desde el raiz.
-  ldapoperations.SearchLdap(connObject,rootSearch=SrvDSAInfo["NamingContexts"][0],scopeSearch="LEVEL")
+  ldapoperations.SearchLdap(connObject,rootSearch=SrvDSAInfo["NamingContexts"][0],scopeSearch="BASE")
   #print(connObject.entries)
   #print("El tipo de objeto entries es {}.".format(type(connObject.entries)))
   ## Primero represento la raiz del naming coontext.
   ## El array treeLine contiene los identificadores de cada linea de texto
-  ## que se incluye en el izquierdo de navegacion. Al acceder a cada uno de ellos
+  ## que se incluye en el arbol de navegacion. Al acceder a cada uno de ellos
   ## podre hacer busquedas del objeto.
   #treeLine=[]
   #treeLine.append(DisplayAndBind(mainConsole,SrvDSAInfo["NamingContexts"][0],10,10))
-  mainConsole.DisplayAndBind(SrvDSAInfo["NamingContexts"][0],10,10,connObject)
-  yPos=30
-  xPos=20
+  mainConsole.DisplayAndBind("","0",SrvDSAInfo["NamingContexts"][0],connObject)
+  identificador=1
+  ldapoperations.SearchLdap(connObject,rootSearch=SrvDSAInfo["NamingContexts"][0],scopeSearch="SUBTREE")
   for ldapentry in connObject.response:
-    #treeLine.append(DisplayAndBind(mainConsole,ldapentry['dn'],yPos,xPos))
-    mainConsole.DisplayAndBind(ldapentry['dn'],yPos,xPos,connObject)
-    yPos+=20
+    if(ldapentry['dn'] == SrvDSAInfo["NamingContexts"][0]):
+      print("Este no")
+      continue
     print(ldapentry)
+    #treeLine.append(DisplayAndBind(mainConsole,ldapentry['dn'],yPos,xPos))
+    mainConsole.DisplayAndBind(SrvDSAInfo["NamingContexts"][0],identificador,ldapentry['dn'],connObject)
+    identificador+=1
 
   rootWindow.mainloop()
   connObject.unbind()
