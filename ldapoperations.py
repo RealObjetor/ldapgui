@@ -1,7 +1,7 @@
 ##################################
 ### Modulo de operaciones LDAP ###
 ##################################
-from ldap3 import Server, Connection, ALL, IP_V4_ONLY, SIMPLE, SYNC 
+from ldap3 import Server, Connection, ALL, IP_V4_ONLY, SIMPLE, SYNC, ALL_ATTRIBUTES, BASE, SUBTREE, LEVEL, DEREF_NEVER
 import ldap3.core.exceptions
 
 def BeginLdap(ldapServer="",ldapPort=389,ldapCredentials={},connSSL=False,connTimeout=10):
@@ -57,9 +57,16 @@ def GetDSAInfo(ServerObject):
 
 def SearchLdap(connectionObject,rootSearch="",scopeSearch="BASE",filterSearch="(objectClass=*)"):
    try:
+     if(scopeSearch == "BASE"): 
+       scopeSearch=BASE
+     elif(scopeSearch == "SUBTREE"):
+       scopeSearch=SUBTREE
+     elif(scopesearch == "LEVEL"):
+       scopeSearch=LEVEL
+      
      connectionObject.search(rootSearch,filterSearch,search_scope=scopeSearch, \
-                             dereference_aliases=ldap3.DEREF_NEVER, \
-                             attributes=["objectClass","uid","cn","name","sn","uidnumber","gidnumber"])
+                             dereference_aliases=DEREF_NEVER, \
+                             attributes=ALL_ATTRIBUTES)
    except OSError as systemError:
      print(systemError)
    except ldap3.core.exceptions.LDAPInvalidFilterError as invalidFilter:
@@ -71,4 +78,3 @@ def SearchLdap(connectionObject,rootSearch="",scopeSearch="BASE",filterSearch="(
    except ldap3.core.exceptions.LDAPInvalidDereferenceAliasesError as invalidDereference:
      print("Exception: {}".format(invalidDereference))
 
-     

@@ -1,5 +1,5 @@
-#### Carga de módulos.
-from tkinter import Tk, X, Y, BOTH, Menu, Canvas, BOTTOM, LEFT, RIGHT, RAISED, NE, W, SW, font, Scrollbar, HORIZONTAL, VERTICAL
+#### Carga de modulos.
+from tkinter import Tk, X, Y, BOTH, Menu, Canvas, BOTTOM, LEFT, RIGHT, RAISED, NE, W, SW, font, Scrollbar, HORIZONTAL, VERTICAL, SCROLL, UNITS
 from tkinter.ttk import Frame, Style, Treeview
 import sys
 import ldapoperations
@@ -61,13 +61,16 @@ class LDAPConsole(Frame):
     self.treeNavFrame=Frame(self)
     self.treeNavFrame.config(relief=RAISED,borderwidth=2)
     self.treeNavView=Treeview(self.treeNavFrame,show="tree",selectmode="browse")
-    self.treeNavView.pack(fill=Y,side=LEFT)
-    self.treeNavFrame.pack(fill=Y,side=LEFT)
-    self.HorScrollBar=Scrollbar(self.treeNavView,activerelief=RAISED,orient=HORIZONTAL)
+    ## Definicin de barras de desplazamiento.
+    self.HorScrollBar=Scrollbar(self.treeNavFrame,activerelief=RAISED,orient=HORIZONTAL,command=self.treeNavView.xview)
+    self.treeNavView.xview=self.HorScrollBar.set
     self.HorScrollBar.pack(fill=X,side=BOTTOM)
-    self.VerScrollBar=Scrollbar(self.treeNavView,activerelief=RAISED,orient=VERTICAL)
+    self.VerScrollBar=Scrollbar(self.treeNavFrame,activerelief=RAISED,orient=VERTICAL,command=self.treeNavView.yview)
+    self.treeNavView.yview=self.VerScrollBar.set
     self.VerScrollBar.pack(fill=Y,side=RIGHT)
-    ## Nuevo frame para contener la información de objetos seleccionados.
+    self.treeNavFrame.pack(fill=Y,side=LEFT)
+    self.treeNavView.pack(fill=BOTH,side=LEFT)
+    ## Nuevo frame para contener la informacion de objetos seleccionados.
     self.infoFrame=Frame(self)
     self.infoFrame.config(relief=RAISED,borderwidth=2)
     self.infoFrameCanvas=Canvas(self.infoFrame,bg="white",width=500,height=400)
@@ -76,11 +79,11 @@ class LDAPConsole(Frame):
 
   def updateInfoSection(self,dntoSearch,infoToDisplay):
     self.infoFrameCanvas.delete("all")
-    self.infoFrameCanvas.create_text(20,20,font=("Liberation Serif Bold",40,"bold"),anchor=W,text="{}".format(dntoSearch[0]))
-    row=40
-    self.infoFrameCanvas.create_text(20,row,font=("Liberation Serif Bold",30),anchor=W,text="objectClass: ")
+    self.infoFrameCanvas.create_text(20,20,font=("Liberation Serif Bold",30,"bold"),anchor=W,text="{}".format(dntoSearch[0]))
+    row=50
+    self.infoFrameCanvas.create_text(20,row,font=("Liberation Serif Bold",20),anchor=W,text="objectClass: ")
     for objclass in infoToDisplay[0]["attributes"]["objectClass"]:
-      self.infoFrameCanvas.create_text(100,row,font=("Liberation Serif Bold",10),anchor=W,text="{}".format(objclass))
+      self.infoFrameCanvas.create_text(160,row,font=("Liberation Serif Bold",10),anchor=W,text="{}".format(objclass))
       row+=20
       print(objclass)
 
@@ -91,8 +94,8 @@ class LDAPConsole(Frame):
     ## Por defecto, click sobre cualquier entrada provoca una busqueda de la misma.
     print("Left clicked mouse on line {}".format(event.widget.selection()))
     dntoSearch=event.widget.selection()
-    print(dntoSearch)
-    ldapoperations.SearchLdap(ldapconnectionobject,rootSearch=dntoSearch,scopeSearch="BASE")
+    print(dntoSearch[0])
+    ldapoperations.SearchLdap(ldapconnectionobject,rootSearch=dntoSearch[0],scopeSearch="BASE")
     self.updateInfoSection(dntoSearch,ldapconnectionobject.response)
 
   def DisplayAndBind(self,parentID,lineIDX,entryIID,textString,ldapconnectionobject):
@@ -115,7 +118,7 @@ class LDAPConsole(Frame):
 
 if __name__ == "__main__":
   
-  print("Cargar configuración.")
+  print("Cargar configuracion.")
   try:
     serverConfig, credentials=loadconfig.LoadConfig()
     ## El fichero de configuracion existe.
@@ -157,7 +160,7 @@ if __name__ == "__main__":
 
   #print("Leer el schema completo del servidor LDAP.")
   #print(srvObject.schema)
-  #print("Leer el árbol completo del servidor LDAP.")
+  #print("Leer el arbol completo del servidor LDAP.")
   print("Los naming contexts disponibles son los siguientes: {}.".format(SrvDSAInfo["NamingContexts"]))
   ## Busqueda base desde el raiz.
   ldapoperations.SearchLdap(connObject,rootSearch=SrvDSAInfo["NamingContexts"][0],scopeSearch="BASE")
