@@ -1,5 +1,5 @@
 #### Carga de módulos.
-from tkinter import Tk, X, Y, BOTH, Menu, Canvas, LEFT, RIGHT, RAISED, NE, W, font, Scrollbar
+from tkinter import Tk, X, Y, BOTH, Menu, Canvas, BOTTOM, LEFT, RIGHT, RAISED, NE, W, SW, font, Scrollbar, HORIZONTAL, VERTICAL
 from tkinter.ttk import Frame, Style, Treeview
 import sys
 import ldapoperations
@@ -60,9 +60,13 @@ class LDAPConsole(Frame):
     ## Nuevo frame para contener la representacion del arbol de directorio.
     self.treeNavFrame=Frame(self)
     self.treeNavFrame.config(relief=RAISED,borderwidth=2)
-    self.treeNavView=Treeview(self.treeNavFrame,show="tree")
+    self.treeNavView=Treeview(self.treeNavFrame,show="tree",selectmode="browse")
     self.treeNavView.pack(fill=Y,side=LEFT)
     self.treeNavFrame.pack(fill=Y,side=LEFT)
+    self.HorScrollBar=Scrollbar(self.treeNavView,activerelief=RAISED,orient=HORIZONTAL)
+    self.HorScrollBar.pack(fill=X,side=BOTTOM)
+    self.VerScrollBar=Scrollbar(self.treeNavView,activerelief=RAISED,orient=VERTICAL)
+    self.VerScrollBar.pack(fill=Y,side=RIGHT)
     ## Nuevo frame para contener la información de objetos seleccionados.
     self.infoFrame=Frame(self)
     self.infoFrame.config(relief=RAISED,borderwidth=2)
@@ -91,8 +95,8 @@ class LDAPConsole(Frame):
     ldapoperations.SearchLdap(ldapconnectionobject,rootSearch=dntoSearch,scopeSearch="BASE")
     self.updateInfoSection(dntoSearch,ldapconnectionobject.response)
 
-  def DisplayAndBind(self,parentID,lineIDX,textString,ldapconnectionobject):
-    self.treeNavView.insert(parentID,lineIDX,textString,open=True,text=textString)
+  def DisplayAndBind(self,parentID,lineIDX,entryIID,textString,ldapconnectionobject):
+    self.treeNavView.insert(parentID,lineIDX,entryIID,open=True,text=textString)
     def lefclickhandler(event, self=self, parameters=ldapconnectionobject):
       return self.__oneLeftClick(event, ldapconnectionobject)
     self.treeNavView.bind('<<TreeviewSelect>>',lefclickhandler)
@@ -164,8 +168,7 @@ if __name__ == "__main__":
   ## que se incluye en el arbol de navegacion. Al acceder a cada uno de ellos
   ## podre hacer busquedas del objeto.
   #treeLine=[]
-  #treeLine.append(DisplayAndBind(mainConsole,SrvDSAInfo["NamingContexts"][0],10,10))
-  mainConsole.DisplayAndBind("","0",SrvDSAInfo["NamingContexts"][0],connObject)
+  mainConsole.DisplayAndBind("","0",SrvDSAInfo["NamingContexts"][0],SrvDSAInfo["NamingContexts"][0],connObject)
   identificador=1
   ldapoperations.SearchLdap(connObject,rootSearch=SrvDSAInfo["NamingContexts"][0],scopeSearch="SUBTREE")
   for ldapentry in connObject.response:
@@ -173,8 +176,8 @@ if __name__ == "__main__":
       print("Este no")
       continue
     print(ldapentry)
-    #treeLine.append(DisplayAndBind(mainConsole,ldapentry['dn'],yPos,xPos))
-    mainConsole.DisplayAndBind(SrvDSAInfo["NamingContexts"][0],identificador,ldapentry['dn'],connObject)
+    parentEntry=ldapentry['dn'][ldapentry['dn'].index(",")+1:]
+    mainConsole.DisplayAndBind(parentEntry,identificador,ldapentry['dn'],ldapentry['dn'][0:ldapentry['dn'].index(",")],connObject)
     identificador+=1
 
   rootWindow.mainloop()
