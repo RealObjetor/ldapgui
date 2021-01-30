@@ -1,5 +1,5 @@
 #### Carga de modulos.
-from tkinter import Tk, X, Y, BOTH, Menu, Canvas, BOTTOM, LEFT, RIGHT, RAISED, NE, W, SW, font, Scrollbar, HORIZONTAL, VERTICAL, SCROLL, UNITS
+from tkinter import Tk, X, Y, BOTH, Menu, Canvas, BOTTOM, LEFT, RIGHT, RAISED, NE, W, SW, font, Scrollbar, HORIZONTAL, VERTICAL
 from tkinter.ttk import Frame, Style, Treeview
 import sys
 import ldapoperations
@@ -57,16 +57,21 @@ class LDAPConsole(Frame):
 
   def createSections(self):
     ## Definicion de frames secundarios anidados en el principal.
-    ## Nuevo frame para contener la representacion del arbol de directorio.
-    self.treeNavFrame=Frame(self)
+    ## Nuevo canvas para contener la representacion del arbol de directorio.
+    ## Solo el widget canvas es scrollable.
+    self.treeNavFrame=Canvas(self,scrollregion=(0,0,1200,800),xscrollincrement=0,yscrollincrement=0)
     self.treeNavFrame.config(relief=RAISED,borderwidth=2)
     self.treeNavView=Treeview(self.treeNavFrame,show="tree",selectmode="browse")
     ## Definicin de barras de desplazamiento.
-    self.HorScrollBar=Scrollbar(self.treeNavFrame,activerelief=RAISED,orient=HORIZONTAL,command=self.treeNavView.xview)
-    self.treeNavView.xview=self.HorScrollBar.set
+    ### Barra de desplazamiento horizontal.
+    self.HorScrollBar=Scrollbar(self.treeNavFrame,activerelief=RAISED,orient=HORIZONTAL)
+    self.HorScrollBar.config(command=self.treeNavFrame.xview)
+    self.treeNavFrame.xscrollcommand=self.HorScrollBar.set
     self.HorScrollBar.pack(fill=X,side=BOTTOM)
-    self.VerScrollBar=Scrollbar(self.treeNavFrame,activerelief=RAISED,orient=VERTICAL,command=self.treeNavView.yview)
-    self.treeNavView.yview=self.VerScrollBar.set
+    ### Barra de desplazamiento vertical.
+    self.VerScrollBar=Scrollbar(self.treeNavFrame,activerelief=RAISED,orient=VERTICAL)
+    self.VerScrollBar.config(command=self.treeNavFrame.yview)
+    self.treeNavFrame.yscrollcommand=self.VerScrollBar.set
     self.VerScrollBar.pack(fill=Y,side=RIGHT)
     self.treeNavFrame.pack(fill=Y,side=LEFT)
     self.treeNavView.pack(fill=BOTH,side=LEFT)
