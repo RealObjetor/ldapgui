@@ -57,24 +57,27 @@ class LDAPConsole(Frame):
 
   def createSections(self):
     ## Definicion de frames secundarios anidados en el principal.
-    ## Nuevo canvas para contener la representacion del arbol de directorio.
-    ## Solo el widget canvas es scrollable.
-    self.treeNavFrame=Canvas(self,scrollregion=(0,0,1200,800),xscrollincrement=0,yscrollincrement=0)
+    ## Nuevo Frame para contener la representacion del arbol de 
+    ## directorio incluyendo las barras de desplazamiento.
+    self.treeNavFrame=Frame(self)
     self.treeNavFrame.config(relief=RAISED,borderwidth=2)
     self.treeNavView=Treeview(self.treeNavFrame,show="tree",selectmode="browse")
-    ## Definicin de barras de desplazamiento.
+    ## Definicoin de barras de desplazamiento.
+    ## La barra de desplazamiento tiene como padre el Frame pero controla 
+    ## el widget treeview.
     ### Barra de desplazamiento horizontal.
     self.HorScrollBar=Scrollbar(self.treeNavFrame,activerelief=RAISED,orient=HORIZONTAL)
-    self.HorScrollBar.config(command=self.treeNavFrame.xview)
-    self.treeNavFrame.xscrollcommand=self.HorScrollBar.set
+    self.HorScrollBar.config(command=self.treeNavView.xview)
     self.HorScrollBar.pack(fill=X,side=BOTTOM)
     ### Barra de desplazamiento vertical.
     self.VerScrollBar=Scrollbar(self.treeNavFrame,activerelief=RAISED,orient=VERTICAL)
-    self.VerScrollBar.config(command=self.treeNavFrame.yview)
-    self.treeNavFrame.yscrollcommand=self.VerScrollBar.set
+    self.VerScrollBar.config(command=self.treeNavView.yview)
     self.VerScrollBar.pack(fill=Y,side=RIGHT)
-    self.treeNavFrame.pack(fill=Y,side=LEFT)
+
+    self.treeNavFrame.pack(fill=BOTH,side=LEFT)
     self.treeNavView.pack(fill=BOTH,side=LEFT)
+
+    self.treeNavView.config(xscrollcommand=self.HorScrollBar.set,yscrollcommand=self.VerScrollBar.set) 
     ## Nuevo frame para contener la informacion de objetos seleccionados.
     self.infoFrame=Frame(self)
     self.infoFrame.config(relief=RAISED,borderwidth=2)
@@ -114,8 +117,10 @@ class LDAPConsole(Frame):
 
   def ExitOption(self):
     self.quit()
+
   def OpenConnection(self):
     self.quit()
+
   def CloseConnection(self):
     self.quit()
 
