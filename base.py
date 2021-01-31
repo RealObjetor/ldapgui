@@ -62,7 +62,7 @@ class LDAPConsole(Frame):
     self.treeNavFrame=Frame(self)
     self.treeNavFrame.config(relief=RAISED,borderwidth=2)
     self.treeNavView=Treeview(self.treeNavFrame,show="tree",selectmode="browse")
-    ## Definicoin de barras de desplazamiento.
+    ## Definicion de barras de desplazamiento.
     ## La barra de desplazamiento tiene como padre el Frame pero controla 
     ## el widget treeview.
     ### Barra de desplazamiento horizontal.
@@ -86,17 +86,40 @@ class LDAPConsole(Frame):
     self.infoFrame.pack(fill=X,anchor=NE)
 
   def updateInfoSection(self,dntoSearch,infoToDisplay):
-    self.infoFrameCanvas.delete("all")
-    self.infoFrameCanvas.create_text(20,20,font=("Liberation Serif Bold",30,"bold"),anchor=W,text="{}".format(dntoSearch[0]))
-    row=50
-    self.infoFrameCanvas.create_text(20,row,font=("Liberation Serif Bold",20),anchor=W,text="objectClass: ")
-    for objclass in infoToDisplay[0]["attributes"]["objectClass"]:
-      self.infoFrameCanvas.create_text(160,row,font=("Liberation Serif Bold",10),anchor=W,text="{}".format(objclass))
-      row+=20
-      print(objclass)
+    try:
+      self.infoFrameCanvas.delete("all")
+      self.infoFrameCanvas.create_text(20,20,font=("Liberation Serif Bold",30,"bold"),anchor=W,text="{}".format(dntoSearch[0]))
+      row=50
+      self.infoFrameCanvas.create_text(20,row,font=("Liberation Serif Bold",20),anchor=W,text="objectClass: ")
+      for objclass in infoToDisplay[0]["attributes"]["objectClass"]:
+        self.infoFrameCanvas.create_text(160,row,font=("Liberation Serif Bold",10),anchor=W,text="{}".format(objclass))
+        row+=20
+        print(objclass)
+    except:
+      print("Error en updateInfoSection")
+
+  def contextOperations(self,cadena,elLDAPObject,operationType):
+    try:
+      if(operationType == "REFRESH"):
+        print("Refresh sobre {}.".format(cadena))
+      if(operationType == "ADD"):
+        print("Nueva entrada sobre {}.".format(cadena))
+      if(operationType == "DELETE"):
+        print("Borrar entrada sobre {}.".format(cadena))
+      if(operationType == "MOVE"):
+        print("Mover entrada sobre {}.".format(cadena))
+    except:
+      print("Error en contextOperations")
 
   def __oneRightClick(self,event,ldapconnectionobject):
     print("Right clicked mouse on line {}".format(event.widget.selection()))
+    self.operationsMenu=Menu(self,tearoff=0,borderwidth=2,relief=RAISED)
+    self.operationsMenu.add_command(label="Refresh tree",command=lambda: self.contextOperations(event.widget.selection(),ldapconnectionobject,"REFRESH"))
+    self.operationsMenu.add_separator()
+    self.operationsMenu.add_command(label="Add Entry",command=lambda: self.contextOperations(event.widget.selection(),ldapconnectionobject,"ADD"))
+    self.operationsMenu.add_command(label="Delete Entry",command=lambda: self.contextOperations(event.widget.selection(),ldapconnectionobject,"DELETE"))
+    self.operationsMenu.add_command(label="Move Entry",command=lambda: self.contextOperations(event.widget.selection(),ldapconnectionobject,"MOVE"))
+    self.operationsMenu.tk_popup(self.treeNavView.winfo_pointerx(),self.treeNavView.winfo_pointery())
 
   def __oneLeftClick(self,event,ldapconnectionobject):
     ## Por defecto, click sobre cualquier entrada provoca una busqueda de la misma.
@@ -106,8 +129,8 @@ class LDAPConsole(Frame):
     ldapoperations.SearchLdap(ldapconnectionobject,rootSearch=dntoSearch[0],scopeSearch="BASE")
     self.updateInfoSection(dntoSearch,ldapconnectionobject.response)
 
-  def DisplayAndBind(self,parentID,lineIDX,entryIID,textString,ldapconnectionobject):
-    self.treeNavView.insert(parentID,lineIDX,entryIID,open=True,text=textString)
+  def DisplayAndBind(self,parentID,lineIDX,entryIID,textString,ldapconnectionobject,isOpen):
+    self.treeNavView.insert(parentID,lineIDX,entryIID,open=isOpen,text=textString)
     def lefclickhandler(event, self=self, parameters=ldapconnectionobject):
       return self.__oneLeftClick(event, ldapconnectionobject)
     self.treeNavView.bind('<<TreeviewSelect>>',lefclickhandler)
@@ -181,20 +204,20 @@ if __name__ == "__main__":
   ## que se incluye en el arbol de navegacion. Al acceder a cada uno de ellos
   ## podre hacer busquedas del objeto.
   #treeLine=[]
-  mainConsole.DisplayAndBind("","0",SrvDSAInfo["NamingContexts"][0],SrvDSAInfo["NamingContexts"][0],connObject)
+  mainConsole.DisplayAndBind("","0",SrvDSAInfo["NamingContexts"][0],SrvDSAInfo["NamingContexts"][0],connObject,"True")
   identificador=1
   ldapoperations.SearchLdap(connObject,rootSearch=SrvDSAInfo["NamingContexts"][0],scopeSearch="SUBTREE")
   for ldapentry in connObject.response:
     if(ldapentry['dn'] == SrvDSAInfo["NamingContexts"][0]):
-      print("Este no")
       continue
     print(ldapentry)
     parentEntry=ldapentry['dn'][ldapentry['dn'].index(",")+1:]
-    mainConsole.DisplayAndBind(parentEntry,identificador,ldapentry['dn'],ldapentry['dn'][0:ldapentry['dn'].index(",")],connObject)
+    mainConsole.DisplayAndBind(parentEntry,identificador,ldapentry['dn'],ldapentry['dn'][0:ldapentry['dn'].index(",")],connObject,"False")
     identificador+=1
 
   rootWindow.mainloop()
   connObject.unbind()
+  mainConsole.destroy()
   print("Limpiando toodo.....")
 
   sys.exit(0)
